@@ -1,3 +1,7 @@
+main: main.o
+	gcc -ggdb3 main.o -o main
+main.o: main.c
+	gcc -ggdb3 -c main.c
 word_count: wc
 wc: wc.o
 	gcc -ggdb3 wc.o -o wc	
