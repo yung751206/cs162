@@ -6,6 +6,9 @@
 
 #pragma once
 
+#ifndef _malloc_H_
+#define _malloc_H_
+
  /* Define the block size since the sizeof will be wrong */
 #define BLOCK_SIZE 40
 
@@ -50,4 +53,6 @@ s_block_ptr extend_heap (s_block_ptr last , size_t s);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
