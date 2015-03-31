@@ -116,6 +116,7 @@ int shell (int argc, char *argv[]) {
   tok_t *t;			/* tokens parsed from input */
   int lineNum = 0;
   int fundex = -1;
+	int status;
   pid_t pid = getpid();		/* get current processes PID */
   pid_t ppid = getppid();	/* get parents PID */
   pid_t cpid, tcpid, cpgid;
@@ -134,8 +135,20 @@ int shell (int argc, char *argv[]) {
     fundex = lookup(t[0]); /* Is first token a shell literal */
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else {
-      fprintf(stdout, "This shell only supports built-ins. Replace this to run programs as commands.\n");
-    }
+  		cpid = fork();
+			if(cpid == 0){
+				execv(t[0],&t[0]);
+				perror("Error");
+				exit(1);
+			}
+			else{
+				tcpid = wait(&status);	
+				if(tcpid != cpid){
+					perror("Error occurs in wait process\n");
+				}
+			}
+		}
+		
     fprintf(stdout, "%d: ", lineNum++);
 		if(getcwd(cwd,sizeof(cwd))){
 			fprintf(stdout,"%s ",cwd);
