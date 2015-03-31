@@ -16,8 +16,8 @@ int stuff = 7;          /* a statically allocarted, pre-initialized variable */
 
 int main (int argc, char *argv[]) {
     int i;            /* a stack allocated variable */
-    char *buf1 = malloc(100); /* dynamically allocate some stuff */
-    char *buf2 = malloc(100); /* and some more stuff */
+    char *buf1 = malloc(1); /* dynamically allocate some stuff */
+    char *buf2 = malloc(1); /* and some more stuff */
     printf("_main  @ %lx\n",(long unsigned int)&main); /* fix to print address of main */
     printf("recur @ %lx\n", (long unsigned int)&recur); /* fix to print address of recur */
     printf("_main stack: %lx\n", (long unsigned int)&i); /* fix to get address of the stack variable */
