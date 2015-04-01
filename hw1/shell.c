@@ -7,6 +7,8 @@
 #include <termios.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+
 
 #define FALSE 0
 #define TRUE 1
@@ -112,14 +114,19 @@ process* create_process(char* inputString)
 
 int shell (int argc, char *argv[]) {
   char *s = malloc(INPUT_STRING_SIZE+1);			/* user input string */
+	char concat_s[1024];
 	char cwd[1024];
+	char *path;
   tok_t *t;			/* tokens parsed from input */
+	tok_t *path_token;
   int lineNum = 0;
   int fundex = -1;
 	int status;
+	int i;
   pid_t pid = getpid();		/* get current processes PID */
   pid_t ppid = getppid();	/* get parents PID */
   pid_t cpid, tcpid, cpgid;
+	struct stat file_stat;
 	
   init_shell();
 
@@ -135,8 +142,22 @@ int shell (int argc, char *argv[]) {
     fundex = lookup(t[0]); /* Is first token a shell literal */
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
     else {
+			path = getenv("PATH");
   		cpid = fork();
 			if(cpid == 0){
+				path_token = getToks(path);
+				i=0;
+				while(path_token[i]){
+					strcpy(concat_s,path_token[i]);
+					strcat(concat_s,"/");
+					strcat(concat_s,t[0]);
+					if(stat(concat_s,&file_stat) == 0){
+						execv(concat_s,&t[0]);
+						perror("Error");
+						exit(1);
+					}
+					i++;
+				}
 				execv(t[0],&t[0]);
 				perror("Error");
 				exit(1);
