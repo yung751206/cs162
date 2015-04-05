@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <termios.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -110,7 +111,12 @@ process* create_process(char* inputString)
   return NULL;
 }
 
-
+void shift_string(char *str[],int i){
+	while(str[i]){
+		str[i] = str[i+1];
+		i++;
+	}
+}
 
 int shell (int argc, char *argv[]) {
   char *s = malloc(INPUT_STRING_SIZE+1);			/* user input string */
@@ -145,6 +151,28 @@ int shell (int argc, char *argv[]) {
 			path = getenv("PATH");
   		cpid = fork();
 			if(cpid == 0){
+				i=0;
+				while(t[i]){
+					if(t[i][0] == '<'){
+						int in = open(t[i+1],O_RDONLY);
+						if(in < 0){
+							fprintf(stdin,"no %s file\n",t[i+1]);
+							exit(EXIT_FAILURE);
+						}
+						dup2(in,0);
+						close(in);
+						t[i] = NULL;
+						break;
+					}
+					else if(t[i][0] == '>'){
+						int out = open(t[i+1],O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+						dup2(out,1);
+						close(out);
+						t[i] = NULL;
+						break;
+					}
+					i++;
+				}
 				path_token = getToks(path);
 				i=0;
 				while(path_token[i]){
