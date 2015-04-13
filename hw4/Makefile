@@ -33,8 +33,8 @@ $(FUSE_DIR)/Makefile:
 clean:
 	rm -rf *.o fs
 	rm -rf tests/*.o
-	rm kvfs
-	rm kvfs_tests
+	rm -f kvfs
+	rm -f kvfs_tests
 
 really-clean: clean
 	$(MAKE) -C $(FUSE_DIR) clean
