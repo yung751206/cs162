@@ -3,7 +3,7 @@ FUSE_DIR = lib/fuse
 CFLAGS = -std=gnu99 -g -Wall -I $(FUSE_DIR)/include -D_FILE_OFFSET_BITS=64
 TFLAGS = -DTESTS
 
-LINKFLAGS = -L$(FUSE_DIR)/lib -lfuse
+LINKFLAGS = -L$(FUSE_DIR)/lib/.libs -lfuse
 
 SRCS = $(wildcard *.c)
 
@@ -33,8 +33,8 @@ $(FUSE_DIR)/Makefile:
 clean:
 	rm -rf *.o fs
 	rm -rf tests/*.o
-	rm -f kvfs
-	rm -f kvfs_tests
+	rm kvfs
+	rm kvfs_tests
 
 really-clean: clean
 	$(MAKE) -C $(FUSE_DIR) clean

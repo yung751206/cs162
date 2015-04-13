@@ -37,16 +37,13 @@ int superblock_size_test(){
                     NULL,
                   };
    int status;
-   int mount_success;
    int pid = fork();
    if (pid == 0) {
         exit(fuse_main(argc, argv, &kvfs_oper, NULL));
    } else {
      waitpid(pid, &status, 0);
-     mount_success = WEXITSTATUS(status) == 0;
    }
    usleep(1000);
-   int superblock_access = (access("./.superblock", F_OK) != -1);
    int fd = open("./.superblock", O_RDONLY);
    int size = lseek(fd, 0, SEEK_END);
    return size == SUPERBLOCK_SIZE;
@@ -97,13 +94,7 @@ int test_clean() {
 suite_info_t fs_tests_suite = {"FS Tests", test_init, test_clean, fs_tests};
 
 int main() {
-    umask(0);
-
-   int argc = 2;
-   char* argv[] = { "kvfs",
-                    "test_sandbox",
-                    NULL,
-                  };
+   umask(0);
    mountparent = (char*) calloc(1,PATH_MAX);
    realpath(".", mountparent);
    safe_run_suite(&fs_tests_suite);
