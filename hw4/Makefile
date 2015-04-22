@@ -19,7 +19,7 @@ TESTEXE = kvfs_tests
 all: fuse $(OBJS) $(MAINOBJ)
 	$(CC) $(OBJS) $(MAINOBJ) $(LINKFLAGS) -o kvfs
 
-fuse: $(FUSE_DIR)/Makefile
+fuse: fuse_conf
 	make -C ./lib/fuse
 
 test: $(OBJS) $(TESTOBJS)
@@ -28,7 +28,7 @@ test: $(OBJS) $(TESTOBJS)
 check: test
 	./$(TESTEXE)
 
-$(FUSE_DIR)/Makefile:
+fuse_conf:
 	cd $(FUSE_DIR); ./configure --prefix=`pwd`
 clean:
 	rm -rf *.o fs
@@ -43,4 +43,4 @@ reset_fs:
 	fusermount -u test_sandbox
 	rm -rf .superblock
 
-.PHONY: all clean check fuse
+.PHONY: all clean check fuse fuse_conf
