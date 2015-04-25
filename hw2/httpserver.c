@@ -39,6 +39,29 @@ int server_proxy_port;
  *      of files in the directory with links to each.
  *   4) Send a 404 Not Found response.
  */
+int is_File(char *path){
+	struct stat path_stat;
+	stat(path,&path_stat);
+	return S_ISREG(path_stat.st_mode);
+}
+
+int is_Directory(char *path){
+	struct stat path_stat;
+	stat(path,&path_stat);
+	return S_ISDIR(path_stat.st_mode);
+}
+
+void write_from_file_to_fd(int fd,char *file_path){
+		int file_des = open(file_path,O_RDONLY);
+		if(file_des == -1){
+			printf("fail to open file\n");
+		}
+   char buffer[1024];
+		while(read(file_des,buffer,sizeof(buffer)) != 0){
+			http_send_string(fd,buffer);
+		}
+}
+
 void handle_files_request(int fd)
 {
 
@@ -47,9 +70,19 @@ void handle_files_request(int fd)
   struct http_request *request = http_request_parse(fd);
 
   http_start_response(fd, 200);
-  http_send_header(fd, "Content-type", "text/html");
-  http_end_headers(fd);
-  http_send_string(fd, "<center><h1>Welcome to httpserver!</h1><hr><p>Nothing's here yet.</p></center>");
+	char* file_path = strcat(server_files_directory,request->path);
+	printf("file path is %s\n",file_path);
+	if(is_Directory(file_path)){
+ 	 	http_send_header(fd, "Content-type", "text/html");
+ 		http_end_headers(fd);
+		file_path = strcat(file_path,"/index.html");
+		write_from_file_to_fd(fd,file_path);
+	}
+  else if(is_File(file_path)){
+  	http_send_header(fd, "Content-type", http_get_mime_type(request->path));
+  	http_end_headers(fd);
+		write_from_file_to_fd(fd,file_path);
+	}
 
 }
 

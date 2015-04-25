@@ -92,6 +92,12 @@ void init_shell()
     tcgetattr(shell_terminal, &shell_tmodes);
   }
   /** YOUR CODE HERE */
+	signal(SIGINT,SIG_IGN);
+	signal(SIGQUIT,SIG_IGN);
+	signal(SIGTSTP,SIG_IGN);
+	//signal(SIGTTIN,SIG_IGN);
+	//signal(SIGTTOU,SIG_IGN);
+	//signal(SIGCHLD,SIG_IGN);
 }
 
 /**
@@ -133,6 +139,7 @@ int shell (int argc, char *argv[]) {
   pid_t ppid = getppid();	/* get parents PID */
   pid_t cpid, tcpid, cpgid;
 	struct stat file_stat;
+	first_process = NULL;
 	
   init_shell();
 
@@ -144,6 +151,19 @@ int shell (int argc, char *argv[]) {
 		fprintf(stdout,"%s ",cwd);
 	}
   while ((s = freadln(stdin))){
+		process* process_ptr = fisrt_process;
+		if(process_ptr){
+			while(process_ptr->next){
+				process_ptr = process_ptr->next;
+			}
+			process_ptr->next = (process*)malloc(sizeof(process));
+			process_ptr = process_ptr->next;
+		}
+		else{
+			first_process = (process*)malloc(sizeof(process));
+			process_ptr = first_process;
+		}
+
     t = getToks(s); /* break the line into tokens */
     fundex = lookup(t[0]); /* Is first token a shell literal */
     if(fundex >= 0) cmd_table[fundex].fun(&t[1]);
@@ -155,6 +175,7 @@ int shell (int argc, char *argv[]) {
 				while(t[i]){
 					if(t[i][0] == '<'){
 						int in = open(t[i+1],O_RDONLY);
+						process_ptr->stdin = in;
 						if(in < 0){
 							fprintf(stdin,"no %s file\n",t[i+1]);
 							exit(EXIT_FAILURE);
