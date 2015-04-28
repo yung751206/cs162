@@ -138,7 +138,6 @@ test_info_t fs_tests[] = {
     {"FS write", write_test},
     {"FS read", read_test},
     {"FS rename", rename_test},
-    {"FS move", move_fs},
     NULL_TEST_INFO
 };
 
