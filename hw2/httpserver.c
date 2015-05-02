@@ -52,23 +52,21 @@ int is_Directory(char *path){
 }
 
 void write_from_file_to_fd(int fd,char *file_path){
-		int file_des = open(file_path,O_RDONLY);
-		if(file_des == -1){
+	int file_des = open(file_path,O_RDONLY);
+	if(file_des == -1){
 			printf("fail to open file\n");
-		}
-   char buffer[1024];
-		while(read(file_des,buffer,sizeof(buffer)) != 0){
-			http_send_string(fd,buffer);
-		}
+	}
+  char buffer[1024];
+	while(read(file_des,buffer,sizeof(buffer)) != 0){
+		http_send_string(fd,buffer);
+	}
+	close(file_des);
 }
 
 void handle_files_request(int fd)
 {
-
   /* YOUR CODE HERE */
-
   struct http_request *request = http_request_parse(fd);
-
   http_start_response(fd, 200);
 	char* file_path = strcat(server_files_directory,request->path);
 	printf("file path is %s\n",file_path);
@@ -83,7 +81,6 @@ void handle_files_request(int fd)
   	http_end_headers(fd);
 		write_from_file_to_fd(fd,file_path);
 	}
-
 }
 
 /*
@@ -99,10 +96,61 @@ void handle_files_request(int fd)
  */
 void handle_proxy_request(int fd)
 {
-
   /* YOUR CODE HERE */
+	int target_fd;
+	struct addrinfo hints,*targetinfo,*p;
+  int rv;
 
+	memset(&hints,0,sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if((rv = getaddrinfo(server_proxy_hostname,"http",&hints,&targetinfo)) != 0 ){
+		fprintf(stderr,"getaddrinfo: %s\n",gai_strerror(rv));
+		exit(1);
+	}
+
+	for(p = targetinfo; p != NULL; p = p->ai_next){
+		if(p->ai_next != NULL){
+			continue;
+		}
+		struct sockaddr_in addr =*( (struct sockaddr_in*)p->ai_addr);
+		addr.sin_port = htons(server_proxy_port);
+
+		size_t addr_length = sizeof(addr);
+		if((target_fd = socket(p->ai_family,p->ai_socktype,p->ai_protocol))==-1){
+			perror("socket");
+			continue;
+		}
+		if(connect(target_fd,(struct sockaddr*)&addr,(socklen_t)addr_length) == -1){
+			close(target_fd);
+			perror("connect");
+			continue;
+		}
+		break;
+	}
+	struct sockaddr_in *addr = (struct sockaddr_in*)p->ai_addr;
+	printf("connect to %s on port %d\n",inet_ntoa(addr->sin_addr),server_proxy_port);
+	if(p == NULL){
+		printf("failed to connect\n");
+		exit(2);
+	}
+  char buffer[1024];
+	int numbytes = read(target_fd,buffer,sizeof(buffer));
+	if(numbytes < 0){
+		perror("read");
+		exit(1);
+	}
+	else if(numbytes ==0){
+		printf("end of file\n");
+	}
+	else{
+		printf("%s",buffer);
+	}
+	close(target_fd);
+	freeaddrinfo(targetinfo);
 }
+
 
 /*
  * Opens a TCP stream socket on all interfaces with port number PORTNO. Saves
