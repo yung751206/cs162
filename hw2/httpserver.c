@@ -17,6 +17,7 @@
 
 #include "libhttp.h"
 
+#define BUFF_SIZE 1024
 /*
  * Global configuration variables.
  * You need to use these in your implementation of handle_files_request and
@@ -63,6 +64,25 @@ void write_from_file_to_fd(int fd,char *file_path){
 	close(file_des);
 }
 
+int read_from_target_write_to_client(int target_fd,int client_fd){
+	char buffer[BUFF_SIZE];
+	int nbytes;
+	nbytes = read(target_fd,buffer,BUFF_SIZE);
+	printf("reveived %d bytes.\n",nbytes);
+	printf("%s",buffer);
+	if(nbytes < 0){
+		perror("read");
+		exit(EXIT_FAILURE);
+	}
+	else if (nbytes == 0){
+		return -1;
+	}
+	else{
+		http_send_string(client_fd,buffer);
+		return 0;
+	}
+}
+
 void handle_files_request(int fd)
 {
   /* YOUR CODE HERE */
@@ -100,11 +120,9 @@ void handle_proxy_request(int fd)
 	int target_fd;
 	struct addrinfo hints,*targetinfo,*p;
   int rv;
-
 	memset(&hints,0,sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
-
 	if((rv = getaddrinfo(server_proxy_hostname,"http",&hints,&targetinfo)) != 0 ){
 		fprintf(stderr,"getaddrinfo: %s\n",gai_strerror(rv));
 		exit(1);
@@ -135,17 +153,38 @@ void handle_proxy_request(int fd)
 		printf("failed to connect\n");
 		exit(2);
 	}
-  char buffer[1024];
-	int numbytes = read(target_fd,buffer,sizeof(buffer));
-	if(numbytes < 0){
-		perror("read");
-		exit(1);
-	}
-	else if(numbytes ==0){
-		printf("end of file\n");
-	}
-	else{
-		printf("%s",buffer);
+
+	//write(target_fd,"GET /\r\n",strlen("GET /\r\n"));	
+	fd_set read_fd_set;
+	fd_set master;
+	FD_ZERO(&master);
+	FD_ZERO(&read_fd_set);
+	FD_SET(target_fd,&master);
+	FD_SET(fd,&master);
+	int r;
+	char buf[10000];
+	while(1){
+		read_fd_set = master;
+		r = select(FD_SETSIZE,&read_fd_set,NULL,NULL,NULL);
+		if(r == 0){
+			printf("error\n");
+			perror("select");
+			exit(EXIT_FAILURE);
+		}	
+		else if( FD_ISSET(fd,&read_fd_set) ){
+			r = read(fd,buf,sizeof(buf));
+			if( r <= 0)  break;
+			r = write(target_fd,buf,r);
+			if( r <= 0) break;
+			printf("client %d bytes\n",r);
+		}
+		else if( FD_ISSET( target_fd,&read_fd_set) ){
+			r = read(target_fd,buf,sizeof(buf));
+			printf("%s",buf);
+			if( r <= 0 ) break;
+			r = write(fd,buf,r);
+			if (r <= 0) break;
+		}
 	}
 	close(target_fd);
 	freeaddrinfo(targetinfo);
