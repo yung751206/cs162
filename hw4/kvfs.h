@@ -2,7 +2,7 @@
 #define KVFS_H
 
 #define FUSE_USE_VERSION 26L
-#define PATH_MAX 1024
+#define FUSE_PATH_MAX 1024
 #define SUPERBLOCK_SIZE 10*4096*2048 + 1
 #define FNODE_MAGIC   0xDEADBEEF
 
