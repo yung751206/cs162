@@ -1,4 +1,4 @@
-prefix=/work/tx/hw4/lib/fuse
+prefix=/home/vagrant/code/personal/hw4/lib/fuse
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include

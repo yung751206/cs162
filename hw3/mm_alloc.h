@@ -50,6 +50,13 @@ s_block_ptr get_block (void *p);
  */
 s_block_ptr extend_heap (s_block_ptr last , size_t s);
 
+void set_block_content(s_block_ptr b,size_t s,struct s_block *next,struct s_block *prev, int free, void *ptr){
+	b->size = s;
+	b->next = next;
+	b->prev = prev;
+	b->free = free;
+	b->ptr = ptr;
+}
 
 #ifdef __cplusplus
 }
