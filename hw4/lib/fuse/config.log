@@ -735,7 +735,7 @@ conftest.c:38:1: warning: function declaration isn't a prototype [-Wstrict-proto
 conftest.c:40:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
  main ()
  ^
-/tmp/cc0wvJKE.o: In function `main':
+/tmp/ccHhKoQL.o: In function `main':
 /home/vagrant/code/personal/hw4/lib/fuse/conftest.c:42: undefined reference to `dlopen'
 collect2: error: ld returned 1 exit status
 configure:12298: $? = 1
